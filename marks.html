@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Marks · Schoolbook{% endblock %}
+{% block content %}
+{% set inp = "mt-1 w-full rounded-md border border-slate-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-board" %}
+<h1 class="font-display text-3xl text-board mb-5">Marks</h1>
+<form method="post" class="bg-white border border-slate-200 rounded-lg p-4 grid gap-3 md:grid-cols-5 items-end mb-6">
+  <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+  <label class="text-sm font-medium md:col-span-2">Student
+    <select name="student_id" required class="{{ inp }}">{% for s in students %}<option value="{{ s.id }}">{{ s.name }} ({{ s.roll_no }})</option>{% endfor %}</select></label>
+  <label class="text-sm font-medium">Subject<input name="subject" required class="{{ inp }}"></label>
+  <label class="text-sm font-medium">Score<input type="number" step="0.1" min="0" name="score" required class="{{ inp }}"></label>
+  <label class="text-sm font-medium">Out of<input type="number" step="0.1" min="1" name="max_score" value="100" class="{{ inp }}"></label>
+  <button class="md:col-span-5 md:justify-self-start px-4 py-2 text-sm rounded-md bg-board text-white" {{ 'disabled' if not students }}>Record marks</button>
+</form>
+<div class="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+<table class="w-full text-sm min-w-[560px]">
+  <thead class="text-left text-slate-500 border-b border-slate-200"><tr><th class="px-4 py-3 font-medium">Student</th><th class="px-4 py-3 font-medium">Subject</th><th class="px-4 py-3 font-medium">Score</th><th class="px-4 py-3 font-medium">%</th><th class="px-4 py-3"></th></tr></thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for m in marks %}
+  <tr><td class="px-4 py-3">{{ m.student.name }}</td><td class="px-4 py-3">{{ m.subject }}</td>
+    <td class="px-4 py-3">{{ '%g' % m.score }} / {{ '%g' % m.max_score }}</td><td class="px-4 py-3">{{ m.percent }}%</td>
+    <td class="px-4 py-3 text-right"><form method="post" action="{{ url_for('delete_mark', mid=m.id) }}" onsubmit="return confirm('Remove this mark?')"><input type="hidden" name="_csrf" value="{{ csrf_token }}"><button class="text-red-700 hover:underline">Remove</button></form></td></tr>
+  {% else %}
+  <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">No marks recorded yet.</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+{% endblock %}

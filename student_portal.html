@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Student record · Schoolbook{% endblock %}
+{% block content %}
+{% if not student %}
+<h1 class="font-display text-3xl text-board mb-2">Welcome, {{ session.name }}</h1>
+<p class="text-slate-600 max-w-lg">No student record matches {{ session.email }} yet. Ask your teacher to add you with this email, then refresh.</p>
+{% else %}
+{% if staff_view %}<a href="{{ url_for('students') }}" class="text-sm text-board underline">Back to students</a>{% endif %}
+<h1 class="font-display text-3xl text-board mb-1">{{ student.name }}</h1>
+<p class="text-slate-500 mb-6">{{ student.roll_no }} · {{ student.course or 'No course set' }}</p>
+<div class="grid md:grid-cols-2 gap-6">
+  <section class="bg-white border border-slate-200 rounded-lg">
+    <div class="px-4 py-3 border-b border-slate-200 font-medium">Attendance: {{ (student.attendance_pct ~ '%') if student.attendance_pct is not none else 'no records' }}</div>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for a in records %}<li class="px-4 py-2 flex justify-between"><span>{{ a.date.strftime('%d %b %Y') }}</span><span>{{ a.status }}</span></li>
+      {% else %}<li class="px-4 py-6 text-slate-500">No attendance recorded yet.</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="bg-white border border-slate-200 rounded-lg">
+    <div class="px-4 py-3 border-b border-slate-200 font-medium">Marks</div>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for m in student.marks %}<li class="px-4 py-2 flex justify-between"><span>{{ m.subject }}</span><span>{{ '%g' % m.score }} / {{ '%g' % m.max_score }} ({{ m.percent }}%)</span></li>
+      {% else %}<li class="px-4 py-6 text-slate-500">No marks recorded yet.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

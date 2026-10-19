@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Students · Schoolbook{% endblock %}
+{% block content %}
+{% set inp = "mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-board" %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+  <h1 class="font-display text-3xl text-board">Students</h1>
+  <button onclick="openModal()" class="bg-board text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-emerald-900">Add student</button>
+</div>
+<form method="get" class="mb-4"><input name="q" value="{{ q }}" placeholder="Search by name, email, roll number or course" class="w-full md:w-96 rounded-md border border-slate-300 px-3 py-2 text-sm bg-white"></form>
+<div class="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+<table class="w-full text-sm min-w-[640px]">
+  <thead class="text-left text-slate-500 border-b border-slate-200"><tr>
+    <th class="px-4 py-3 font-medium">Roll no.</th><th class="px-4 py-3 font-medium">Name</th><th class="px-4 py-3 font-medium">Email</th><th class="px-4 py-3 font-medium">Course</th><th class="px-4 py-3 font-medium">Attendance</th><th class="px-4 py-3"></th></tr></thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for s in students %}
+  <tr>
+    <td class="px-4 py-3">{{ s.roll_no }}</td>
+    <td class="px-4 py-3"><a class="text-board hover:underline" href="{{ url_for('student_detail', sid=s.id) }}">{{ s.name }}</a></td>
+    <td class="px-4 py-3">{{ s.email }}</td><td class="px-4 py-3">{{ s.course }}</td>
+    <td class="px-4 py-3">{{ (s.attendance_pct ~ '%') if s.attendance_pct is not none else '–' }}</td>
+    <td class="px-4 py-3 text-right whitespace-nowrap">
+      <button class="text-board hover:underline mr-3" data-id="{{ s.id }}" data-name="{{ s.name }}" data-email="{{ s.email }}" data-course="{{ s.course }}" data-phone="{{ s.phone }}" onclick="openModal(this)">Edit</button>
+      {% if session.role == 'Admin' %}
+      <form method="post" action="{{ url_for('delete_student', sid=s.id) }}" class="inline" onsubmit="return confirm('Delete {{ s.name|e }} and all their records?')">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}"><button class="text-red-700 hover:underline">Delete</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">{{ 'No students match your search.' if q else 'No students yet. Use “Add student” to create the first one.' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div id="modal" class="hidden fixed inset-0 bg-black/40 items-center justify-center p-4 z-50">
+  <form id="studentForm" method="post" class="bg-white rounded-lg w-full max-w-md p-6 space-y-3">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <h2 id="modalTitle" class="font-display text-xl text-board">Add student</h2>
+    <label class="block text-sm font-medium">Full name<input name="name" required class="{{ inp }}"></label>
+    <label class="block text-sm font-medium">Email<input type="email" name="email" required class="{{ inp }}"></label>
+    <label class="block text-sm font-medium">Course<input name="course" class="{{ inp }}"></label>
+    <label class="block text-sm font-medium">Phone<input name="phone" class="{{ inp }}"></label>
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm rounded-md border border-slate-300">Cancel</button>
+      <button class="px-4 py-2 text-sm rounded-md bg-board text-white">Save student</button>
+    </div>
+  </form>
+</div>
+<script>
+const modal = document.getElementById('modal'), form = document.getElementById('studentForm');
+function openModal(btn) {
+  form.reset();
+  if (btn) {
+    form.action = "{{ url_for('students') }}/" + btn.dataset.id + "/edit";
+    document.getElementById('modalTitle').textContent = 'Edit student';
+    for (const k of ['name','email','course','phone']) form.elements[k].value = btn.dataset[k] || '';
+  } else {
+    form.action = "{{ url_for('add_student') }}";
+    document.getElementById('modalTitle').textContent = 'Add student';
+  }
+  modal.classList.replace('hidden','flex');
+  form.elements.name.focus();
+}
+function closeModal() { modal.classList.replace('flex','hidden'); }
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+{% endblock %}
